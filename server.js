@@ -11,7 +11,7 @@ function startBot() {
   const bot = mineflayer.createBot({
     host: '5.9.41.143',
     port: 29449,
-    username: 'Toxic_Bot',
+    username: 'Alie',
     version: false
   });
 
