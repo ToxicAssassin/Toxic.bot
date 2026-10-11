@@ -1,9 +1,9 @@
 const mineflayer = require('mineflayer');
 const http = require('http');
 
-// وب‌سرور برای زنده ماندن روی Render
+// وب‌سرور برای زنده ماندن در Render
 http.createServer((req, res) => {
-  res.write("Toxic_Bot is Online 24/7!");
+  res.write("Toxic_Pro is Mining and Jumping 24/7!");
   res.end();
 }).listen(process.env.PORT || 3000);
 
@@ -11,61 +11,86 @@ function startBot() {
   const bot = mineflayer.createBot({
     host: '5.9.41.143',
     port: 29449,
-    username: 'Alie',
+    username: 'Toxic_Pro',
     version: false
   });
 
+  // ثبت‌نام و لاگین خودکار
   bot.on('login', () => {
-    console.log('🔥 Toxic_Bot وارد سرور شد، ارسال دستورات لاگین...');
-    
-    // ارسال دستور رجیستر و لاگین خودکار
+    console.log('🔥 Toxic_Pro وارد سرور شد، ارسال دستورات لاگین...');
     setTimeout(() => {
-      try {
-        bot.chat('/register 123456 123456');
-      } catch (e) {}
+      try { bot.chat('/register 123456 123456'); } catch (e) {}
     }, 1500);
-
     setTimeout(() => {
-      try {
-        bot.chat('/login 123456');
-        console.log('🔑 دستورات لاگین ارسال شد!');
-      } catch (e) {}
+      try { bot.chat('/login 123456'); } catch (e) {}
     }, 2500);
   });
 
   bot.on('spawn', () => {
-    // پرش نرم هر ۶۰ ثانیه برای جلوگیری از کیک AFK
+    console.log('✅ بات اسپاون شد و فعالیت‌ها فعال شدند.');
+
+    // ۱. سیستم پرش و راه رفتن تصادفی (هر ۲۰ ثانیه)
     setInterval(() => {
       try {
-        if (bot && bot.entity) {
-          bot.setControlState('jump', true);
-          setTimeout(() => bot.setControlState('jump', false), 400);
-        }
-      } catch (e) {}
-    }, 60000);
-  });
+        if (!bot || !bot.entity) return;
 
-  // اتو ریسپاون خودکار در صورت کشته شدن
-  bot.on('death', () => {
-    console.log('⚠️ بات کشته شد! ۱ ثانیه دیگر ریسپاون می‌شود...');
-    setTimeout(() => {
+        // جهت نگاه تصادفی
+        const randomYaw = Math.random() * Math.PI * 2;
+        bot.look(randomYaw, 0);
+
+        // راه رفتن به جلو و پریدن
+        bot.setControlState('forward', true);
+        bot.setControlState('jump', true);
+
+        // متوقف شدن بعد از ۱.۵ ثانیه راه رفتن
+        setTimeout(() => {
+          bot.setControlState('forward', false);
+          bot.setControlState('jump', false);
+        }, 1500);
+      } catch (err) {}
+    }, 20000);
+
+    // ۲. سیستم کندن بلاک‌های اطراف (مثل Stone و Dirt) هر ۱۵ ثانیه
+    setInterval(() => {
       try {
-        bot.respawn();
-        console.log('✅ Toxic_Bot فوراً ریسپاون شد!');
-      } catch (err) {
-        console.log('خطا در ریسپاون: ', err.message);
-      }
-    }, 1000);
+        if (!bot || !bot.entity) return;
+
+        // جستجو برای بلاک‌های معمولی
+        const targetBlock = bot.findBlock({
+          matching: (block) => {
+            if (!block) return false;
+            const name = block.name;
+            return name === 'stone' || name === 'cobblestone' || name === 'dirt' || name === 'grass_block' || name === 'deepslate';
+          },
+          maxDistance: 4
+        });
+
+        if (targetBlock && bot.canDigBlock(targetBlock)) {
+          // نگاه کردن به سمت بلاک و کندن آن
+          bot.lookAt(targetBlock.position.offset(0.5, 0.5, 0.5)).then(() => {
+            bot.dig(targetBlock).catch(() => {});
+          }).catch(() => {});
+        }
+      } catch (err) {}
+    }, 15000);
   });
 
-  // اتصال مجدد در صورت ری‌استارت سرور
+  // زنده شدن مجدد بعد از مرگ
+  bot.on('death', () => {
+    console.log('💀 بات کشته شد، در حال زنده شدن مجدد...');
+    setTimeout(() => {
+      try { bot.respawn(); } catch (err) {}
+    }, 1200);
+  });
+
+  // وصل شدن دوباره در صورت قطعی
   bot.on('end', () => {
-    console.log('اتصال قطع شد، ۱۰ ثانیه دیگر تلاش مجدد...');
+    console.log('⚠️ ارتباط قطع شد. تلاش مجدد تا ۱۰ ثانیه دیگر...');
     setTimeout(startBot, 10000);
   });
 
   bot.on('error', (err) => {
-    console.log('خطا: ', err.message);
+    console.log('خطا:', err.message);
   });
 }
 
